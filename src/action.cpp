@@ -113,7 +113,10 @@ void uninstall(Config_t config, int force) {
             if (std::filesystem::exists(prognamepath) && force == 1) {
                 std::filesystem::remove(prognamepath);
             }
-            if (!std::filesystem::exists(prognamepath)) {
+            if (!std::filesystem::exists(prognamepath) || std::filesystem::is_symlink(prognamepath)) {
+                if (std::filesystem::is_symlink(prognamepath)) {
+                    std::filesystem::remove(prognamepath);
+                }
                 std::filesystem::rename(config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/")), prognamepath);
                 std::filesystem::remove(config.dotfilespath + "/" + progname);
             } else {
@@ -125,4 +128,12 @@ void uninstall(Config_t config, int force) {
     }
     printf("Dotfiles copied back to their initial directory");
 };
-void newconf(Config_t config) { return; };
+void newconf(Config_t config) {
+    YAML::Emitter newconfE;
+    std::string config_packup_path;
+    config_packup_path = "/.config/" + config.programname + "/" + config.programname + ".yaml";
+    newconfE << YAML::BeginMap << YAML::Key << "Backup" << YAML::Value << YAML::BeginMap << YAML::Key << config.programname << YAML::Value << "~" + config_packup_path << YAML::EndMap << YAML::EndMap;
+    printf("%s", newconfE.c_str());
+    std::ofstream newconfout((config.home + config_packup_path).c_str());
+    newconfout << newconfE.c_str();
+};
