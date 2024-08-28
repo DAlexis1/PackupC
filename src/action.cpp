@@ -31,6 +31,7 @@ Config_t get_config() {
     config.configpath = config.configdir + "/" + config.programname + "/" + config.programname + ".yaml";
     return config;
 };
+
 void CorrectNode(YAML::Node &backupmap, Config_t config) {
     int endstr;
     for (YAML::const_iterator prog = backupmap.begin(); prog != backupmap.end(); ++prog) {
@@ -64,9 +65,9 @@ void backup(Config_t config) {
         } else {
             std::filesystem::create_directory(config.dotfilespath + "/" + progname.c_str());
 
-            std::filesystem::rename(prognamepath, config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/")));
+            std::filesystem::rename(prognamepath, config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/") + 1));
 
-            std::filesystem::create_symlink(config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/")), prognamepath);
+            std::filesystem::create_symlink(config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/") + 1), prognamepath);
         }
     }
 
@@ -83,12 +84,12 @@ void restore(Config_t config, int force) {
         progname = prog->first.as<std::string>();
         prognamepath = prog->second.as<std::string>();
 
-        if (std::filesystem::exists(config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/")))) {
+        if (std::filesystem::exists(config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/") + 1))) {
             if (std::filesystem::exists(prognamepath) && force == 1) {
                 std::filesystem::remove(prognamepath);
             }
             if (!std::filesystem::exists(prognamepath)) {
-                std::filesystem::create_symlink(config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/")), prognamepath);
+                std::filesystem::create_symlink(config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/") + 1), prognamepath);
             } else {
                 printf("A config already exist for %s, please save it in another place\n", progname.c_str());
             }
@@ -109,7 +110,7 @@ void uninstall(Config_t config, int force) {
         progname = prog->first.as<std::string>();
         prognamepath = prog->second.as<std::string>();
 
-        if (std::filesystem::exists(config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/")))) {
+        if (std::filesystem::exists(config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/") + 1))) {
             if (std::filesystem::exists(prognamepath) && force == 1) {
                 std::filesystem::remove(prognamepath);
             }
@@ -117,7 +118,7 @@ void uninstall(Config_t config, int force) {
                 if (std::filesystem::is_symlink(prognamepath)) {
                     std::filesystem::remove(prognamepath);
                 }
-                std::filesystem::rename(config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/")), prognamepath);
+                std::filesystem::rename(config.dotfilespath + "/" + progname.c_str() + "/" + prognamepath.substr(prognamepath.find_last_of("/") + 1), prognamepath);
                 std::filesystem::remove(config.dotfilespath + "/" + progname);
             } else {
                 printf("A config already exist for %s, please save it in another place\n", progname.c_str());
